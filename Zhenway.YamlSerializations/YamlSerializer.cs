@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.EventEmitters;
 using YamlDotNet.Serialization.NamingConventions;
-using YamlDotNet.Serialization.ObjectGraphTraversalStrategies;
 using YamlDotNet.Serialization.ObjectGraphVisitors;
 using YamlDotNet.Serialization.TypeInspectors;
 using YamlDotNet.Serialization.TypeResolvers;
@@ -23,6 +19,7 @@ namespace Zhenway.YamlSerializations
         private readonly SerializationOptions options;
         private readonly INamingConvention namingConvention;
         private readonly ITypeResolver typeResolver;
+
         public YamlSerializer(SerializationOptions options = SerializationOptions.None, INamingConvention namingConvention = null)
         {
             this.options = options;
@@ -112,8 +109,7 @@ namespace Zhenway.YamlSerializations
 
         private IObjectGraphTraversalStrategy CreateTraversalStrategy()
         {
-            ITypeInspector typeDescriptor = new ReadablePropertiesTypeInspector(typeResolver);
-            typeDescriptor = new EmitTypeInspector(typeResolver, typeDescriptor);
+            ITypeInspector typeDescriptor = new EmitTypeInspector(typeResolver);
             if (IsOptionSet(SerializationOptions.Roundtrip))
             {
                 typeDescriptor = new ReadableAndWritablePropertiesTypeInspector(typeDescriptor);

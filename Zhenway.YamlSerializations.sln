@@ -5,6 +5,10 @@ VisualStudioVersion = 14.0.24630.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zhenway.YamlSerializations", "Zhenway.YamlSerializations\Zhenway.YamlSerializations.csproj", "{87EFC656-3081-442E-902B-822714514768}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTest", "UnitTest\UnitTest.csproj", "{1F051502-8A63-496F-B27D-0506671FF53F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfTest", "PerfTest\PerfTest.csproj", "{4562F607-3AB2-4EF8-BE4F-8FD0902D6329}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{87EFC656-3081-442E-902B-822714514768}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87EFC656-3081-442E-902B-822714514768}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87EFC656-3081-442E-902B-822714514768}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F051502-8A63-496F-B27D-0506671FF53F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F051502-8A63-496F-B27D-0506671FF53F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F051502-8A63-496F-B27D-0506671FF53F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F051502-8A63-496F-B27D-0506671FF53F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4562F607-3AB2-4EF8-BE4F-8FD0902D6329}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4562F607-3AB2-4EF8-BE4F-8FD0902D6329}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4562F607-3AB2-4EF8-BE4F-8FD0902D6329}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4562F607-3AB2-4EF8-BE4F-8FD0902D6329}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

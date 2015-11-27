@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text.RegularExpressions;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.TypeInspectors;
@@ -10,27 +12,20 @@ namespace Zhenway.YamlSerializations
 {
     public class EmitTypeInspector : TypeInspectorSkeleton
     {
-        private readonly Dictionary<Type, CachingItem> _cache = new Dictionary<Type, CachingItem>();
+        private static readonly ConcurrentDictionary<Type, CachingItem> _cache = new ConcurrentDictionary<Type, CachingItem>();
         private readonly ITypeResolver _resolver;
-        private readonly ITypeInspector _innerTypeDescriptor;
 
-        public EmitTypeInspector(ITypeResolver resolver, ITypeInspector innerTypeDescriptor)
+        public EmitTypeInspector(ITypeResolver resolver)
         {
             _resolver = resolver;
-            _innerTypeDescriptor = innerTypeDescriptor;
         }
 
         public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object container)
         {
-            CachingItem ci;
-            if (!_cache.TryGetValue(type, out ci))
-            {
-                ci = CachingItem.Create(type, _resolver);
-                _cache[type] = ci;
-            }
+            CachingItem ci = _cache.GetOrAdd(type, t => CachingItem.Create(t, _resolver));
             if (ci == null)
             {
-                return _innerTypeDescriptor.GetProperties(type, container);
+                throw new NotSupportedException($"Type {type.FullName} is invisible.");
             }
             return ci.Properies;
         }
@@ -128,6 +123,8 @@ namespace Zhenway.YamlSerializations
 
         private sealed class EmitPropertyDescriptor : IPropertyDescriptor
         {
+            private readonly Dictionary<Type, Attribute> _attributeCache = new Dictionary<Type, Attribute>();
+
             internal PropertyInfo Property { get; set; }
 
             internal ITypeResolver TypeResolver { get; set; }
@@ -150,13 +147,37 @@ namespace Zhenway.YamlSerializations
 
             public T GetCustomAttribute<T>() where T : Attribute
             {
-                return Property.GetCustomAttribute<T>();
+                Attribute attribute;
+                if (_attributeCache.TryGetValue(typeof(T), out attribute))
+                {
+                    return (T)attribute;
+                }
+                var result = Property.GetCustomAttribute<T>();
+                _attributeCache[typeof(T)] = result;
+                return result;
             }
 
             public IObjectDescriptor Read(object target)
             {
                 var value = Reader(target);
-                return new ObjectDescriptor(value, TypeOverride ?? TypeResolver.Resolve(Type, value), Type, ScalarStyle);
+                var style = ScalarStyle;
+                var s = value as string;
+                if (s != null)
+                {
+                    if (Regexes.BooleanLike.IsMatch(s))
+                    {
+                        style = ScalarStyle.DoubleQuoted;
+                    }
+                    else if (Regexes.IntegerLike.IsMatch(s))
+                    {
+                        style = ScalarStyle.DoubleQuoted;
+                    }
+                    else if (Regexes.DoubleLike.IsMatch(s))
+                    {
+                        style = ScalarStyle.DoubleQuoted;
+                    }
+                }
+                return new ObjectDescriptor(value, TypeOverride ?? TypeResolver.Resolve(Type, value), Type, style);
             }
 
             public void Write(object target, object value)

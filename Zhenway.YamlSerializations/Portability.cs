@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -28,11 +27,6 @@ namespace Zhenway.YamlSerializations
 
 	internal static class ReflectionExtensions
 	{
-		public static bool IsValueType(this Type type)
-		{
-			return type.GetTypeInfo().IsValueType;
-		}
-
 		public static bool IsGenericType(this Type type)
 		{
 			return type.GetTypeInfo().IsGenericType;
@@ -41,11 +35,6 @@ namespace Zhenway.YamlSerializations
 		public static bool IsInterface(this Type type)
 		{
 			return type.GetTypeInfo().IsInterface;
-		}
-
-		public static bool IsEnum(this Type type)
-		{
-			return type.GetTypeInfo().IsEnum;
 		}
 
 		/// <summary>
@@ -162,27 +151,6 @@ namespace Zhenway.YamlSerializations
 				: type.GetRuntimeProperties().Where(instancePublic);
 		}
 
-		public static IEnumerable<MethodInfo> GetPublicStaticMethods(this Type type)
-		{
-			return type.GetRuntimeMethods()
-				.Where(m => m.IsPublic && m.IsStatic);
-		}
-
-		public static MethodInfo GetPublicStaticMethod(this Type type, string name, params Type[] parameterTypes)
-		{
-			return type.GetRuntimeMethods()
-				.FirstOrDefault(m =>
-				{
-					if (m.IsPublic && m.IsStatic && m.Name.Equals(name))
-					{
-						var parameters = m.GetParameters();
-						return parameters.Length == parameterTypes.Length
-							&& parameters.Zip(parameterTypes, (pi, pt) => pi.Equals(pt)).All(r => r);
-					}
-					return false;
-				});
-		}
-
 		public static MethodInfo GetGetMethod(this PropertyInfo property)
 		{
 			return property.GetMethod;
@@ -226,30 +194,10 @@ namespace Zhenway.YamlSerializations
 		private DBNull() {}
 	}
 
-	internal sealed class CultureInfoAdapter : CultureInfo
-	{
-		private readonly IFormatProvider _provider;
-
-		public CultureInfoAdapter(CultureInfo baseCulture, IFormatProvider provider)
-			: base(baseCulture.Name)
-		{
-			_provider = provider;
-		}
-
-		public override object GetFormat(Type formatType)
-		{
-			return _provider.GetFormat(formatType);
-		}
-	}
 #else
 
     internal static class ReflectionExtensions
     {
-        public static bool IsValueType(this Type type)
-        {
-            return type.IsValueType;
-        }
-
 		public static bool IsGenericType(this Type type)
 		{
 			return type.IsGenericType;
@@ -258,11 +206,6 @@ namespace Zhenway.YamlSerializations
         public static bool IsInterface(this Type type)
         {
             return type.IsInterface;
-        }
-
-        public static bool IsEnum(this Type type)
-        {
-            return type.IsEnum;
         }
 
         /// <summary>
@@ -292,16 +235,6 @@ namespace Zhenway.YamlSerializations
 				: type.GetProperties(instancePublic);
 		}
 
-		public static IEnumerable<MethodInfo> GetPublicStaticMethods(this Type type)
-		{
-			return type.GetMethods(BindingFlags.Static | BindingFlags.Public);
-		}
-
-		public static MethodInfo GetPublicStaticMethod(this Type type, string name, params Type[] parameterTypes)
-		{
-			return type.GetMethod(name, BindingFlags.Public | BindingFlags.Static, null, parameterTypes, null);
-		}
-
 		private static readonly FieldInfo remoteStackTraceField = typeof(Exception)
 				.GetField("_remoteStackTraceString", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -316,39 +249,5 @@ namespace Zhenway.YamlSerializations
 		}
 	}
 
-	internal sealed class CultureInfoAdapter : CultureInfo
-	{
-		private readonly IFormatProvider _provider;
-
-		public CultureInfoAdapter(CultureInfo baseCulture, IFormatProvider provider)
-			: base(baseCulture.LCID)
-		{
-			_provider = provider;
-		}
-
-		public override object GetFormat(Type formatType)
-		{
-			return _provider.GetFormat(formatType);
-		}
-	}
-
-#endif
-
-#if UNITY
-	internal static class PropertyInfoExtensions
-	{
-		public static object ReadValue(this PropertyInfo property, object target)
-		{
-			return property.GetGetMethod().Invoke(target, null);
-		}
-	}
-#else
-    internal static class PropertyInfoExtensions
-	{
-		public static object ReadValue(this PropertyInfo property, object target)
-		{
-			return property.GetValue(target, null);
-		}
-	}
 #endif
 }

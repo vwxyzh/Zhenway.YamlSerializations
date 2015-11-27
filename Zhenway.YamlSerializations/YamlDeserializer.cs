@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
@@ -18,7 +19,7 @@ namespace Zhenway.YamlSerializations
     /// <summary>
     /// A façade for the YAML library with the standard configuration.
     /// </summary>
-    public sealed class Deserializer
+    public sealed class YamlDeserializer
     {
         private static readonly Dictionary<string, Type> predefinedTagMappings = new Dictionary<string, Type>
         {
@@ -53,7 +54,7 @@ namespace Zhenway.YamlSerializations
             }
         }
 
-        public Deserializer(
+        public YamlDeserializer(
             IObjectFactory objectFactory = null,
             INamingConvention namingConvention = null,
             bool ignoreUnmatched = false)
@@ -66,10 +67,7 @@ namespace Zhenway.YamlSerializations
                     new NamingConventionTypeInspector(
                         new ReadableAndWritablePropertiesTypeInspector(
                             new EmitTypeInspector(
-                                new StaticTypeResolver(),
-                                new ReadablePropertiesTypeInspector(
-                                    new StaticTypeResolver()
-                                )
+                                new StaticTypeResolver()
                             )
                         ),
                         namingConvention
@@ -86,10 +84,10 @@ namespace Zhenway.YamlSerializations
             NodeDeserializers.Add(new TypeConverterNodeDeserializer(converters));
             NodeDeserializers.Add(new NullNodeDeserializer());
             NodeDeserializers.Add(new ScalarNodeDeserializer());
-            NodeDeserializers.Add(new ArrayNodeDeserializer());
+            NodeDeserializers.Add(new EmitArrayNodeDeserializer());
             NodeDeserializers.Add(new GenericDictionaryNodeDeserializer(objectFactory));
             NodeDeserializers.Add(new NonGenericDictionaryNodeDeserializer(objectFactory));
-            NodeDeserializers.Add(new GenericCollectionNodeDeserializer(objectFactory));
+            NodeDeserializers.Add(new EmitGenericCollectionNodeDeserializer(objectFactory));
             NodeDeserializers.Add(new NonGenericListNodeDeserializer(objectFactory));
             NodeDeserializers.Add(new EnumerableNodeDeserializer());
             NodeDeserializers.Add(new ObjectNodeDeserializer(objectFactory, typeDescriptor, ignoreUnmatched));
@@ -99,6 +97,7 @@ namespace Zhenway.YamlSerializations
             TypeResolvers.Add(new TagNodeTypeResolver(tagMappings));
             TypeResolvers.Add(new TypeNameInTagNodeTypeResolver());
             TypeResolvers.Add(new DefaultContainersNodeTypeResolver());
+            TypeResolvers.Add(new ScalarYamlNodeTypeResolver());
 
             valueDeserializer =
                 new AliasValueDeserializer(
