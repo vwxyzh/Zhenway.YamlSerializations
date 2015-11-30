@@ -59,18 +59,20 @@ namespace Zhenway.YamlSerializations
             INamingConvention namingConvention = null,
             bool ignoreUnmatched = false)
         {
-            objectFactory = objectFactory ?? new DefaultObjectFactory();
+            objectFactory = objectFactory ?? new DefaultEmitObjectFactory();
             namingConvention = namingConvention ?? new NullNamingConvention();
 
             typeDescriptor.TypeDescriptor =
-                new YamlAttributesTypeInspector(
-                    new NamingConventionTypeInspector(
-                        new ReadableAndWritablePropertiesTypeInspector(
-                            new EmitTypeInspector(
-                                new StaticTypeResolver()
-                            )
-                        ),
-                        namingConvention
+                new CachedTypeInspector(
+                    new YamlAttributesTypeInspector(
+                        new NamingConventionTypeInspector(
+                            new ReadableAndWritablePropertiesTypeInspector(
+                                new EmitTypeInspector(
+                                    new StaticTypeResolver()
+                                )
+                            ),
+                            namingConvention
+                        )
                     )
                 );
 

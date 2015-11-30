@@ -6,18 +6,6 @@ using System.Text.RegularExpressions;
 
 namespace Zhenway.YamlSerializations
 {
-#if (PORTABLE || UNITY)
-	internal static class StandardRegexOptions
-	{
-		public const RegexOptions Compiled = RegexOptions.None;
-	}
-#else
-    internal static class StandardRegexOptions
-	{
-		public const RegexOptions Compiled = RegexOptions.Compiled;
-	}
-#endif
-
 #if PORTABLE
 	/// <summary>
 	/// Mock SerializableAttribute to avoid having to add #if all over the place

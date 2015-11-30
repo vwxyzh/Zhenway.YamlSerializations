@@ -50,6 +50,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CachedTypeInspector.cs" />
+    <Compile Include="DefaultEmitObjectFactory.cs" />
     <Compile Include="NodeDeserializers\EmitGenericDictionaryNodeDeserializer.cs" />
     <Compile Include="NodeDeserializers\EmitArrayNodeDeserializer.cs" />
     <Compile Include="NodeDeserializers\EmitGenericCollectionNodeDeserializer.cs" />

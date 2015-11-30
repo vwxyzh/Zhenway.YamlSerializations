@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 using Xunit;
 
@@ -23,6 +24,10 @@ BoolValue: true
             Assert.Equal(1, obj.IntValue);
             Assert.Equal("abc", obj.StringValue);
             Assert.Equal(true, obj.BoolValue);
+            var dict = d.Deserialize<Dictionary<string, object>>(new StringReader(sw.ToString()));
+            Assert.Equal(1, dict["IntValue"]);
+            Assert.Equal("abc", dict["StringValue"]);
+            Assert.Equal(true, dict["BoolValue"]);
         }
 
         [Fact]
@@ -40,6 +45,10 @@ BoolValue: true
             Assert.Equal(1, obj.IntValue);
             Assert.Equal("true", obj.StringValue);
             Assert.Equal(true, obj.BoolValue);
+            var dict = d.Deserialize<Dictionary<string, object>>(new StringReader(sw.ToString()));
+            Assert.Equal(1, dict["IntValue"]);
+            Assert.Equal("true", dict["StringValue"]);
+            Assert.Equal(true, dict["BoolValue"]);
         }
 
         [Fact]
@@ -57,6 +66,10 @@ BoolValue: true
             Assert.Equal(1, obj.IntValue);
             Assert.Equal("123", obj.StringValue);
             Assert.Equal(true, obj.BoolValue);
+            var dict = d.Deserialize<Dictionary<string, object>>(new StringReader(sw.ToString()));
+            Assert.Equal(1, dict["IntValue"]);
+            Assert.Equal("123", dict["StringValue"]);
+            Assert.Equal(true, dict["BoolValue"]);
         }
 
         [Fact]
@@ -74,6 +87,10 @@ BoolValue: true
             Assert.Equal(1, obj.IntValue);
             Assert.Equal("1.23", obj.StringValue);
             Assert.Equal(true, obj.BoolValue);
+            var dict = d.Deserialize<Dictionary<string, object>>(new StringReader(sw.ToString()));
+            Assert.Equal(1, dict["IntValue"]);
+            Assert.Equal("1.23", dict["StringValue"]);
+            Assert.Equal(true, dict["BoolValue"]);
         }
 
         public class Entity
