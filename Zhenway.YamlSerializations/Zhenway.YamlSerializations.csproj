@@ -64,6 +64,7 @@
     <Compile Include="Regexes.cs" />
     <Compile Include="RoundtripObjectGraphTraversalStrategy.cs" />
     <Compile Include="ScalarYamlNodeTypeResolver.cs" />
+    <Compile Include="ObjectDescriptor.cs" />
     <Compile Include="YamlSerializer.cs" />
     <Compile Include="YamlTypeConverters.cs" />
   </ItemGroup>

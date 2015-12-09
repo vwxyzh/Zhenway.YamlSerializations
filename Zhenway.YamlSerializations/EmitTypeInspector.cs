@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text.RegularExpressions;
+
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.TypeInspectors;
@@ -160,24 +160,7 @@ namespace Zhenway.YamlSerializations
             public IObjectDescriptor Read(object target)
             {
                 var value = Reader(target);
-                var style = ScalarStyle;
-                var s = value as string;
-                if (s != null)
-                {
-                    if (Regexes.BooleanLike.IsMatch(s))
-                    {
-                        style = ScalarStyle.DoubleQuoted;
-                    }
-                    else if (Regexes.IntegerLike.IsMatch(s))
-                    {
-                        style = ScalarStyle.DoubleQuoted;
-                    }
-                    else if (Regexes.DoubleLike.IsMatch(s))
-                    {
-                        style = ScalarStyle.DoubleQuoted;
-                    }
-                }
-                return new ObjectDescriptor(value, TypeOverride ?? TypeResolver.Resolve(Type, value), Type, style);
+                return new ObjectDescriptor(value, TypeOverride ?? TypeResolver.Resolve(Type, value), Type, ScalarStyle);
             }
 
             public void Write(object target, object value)

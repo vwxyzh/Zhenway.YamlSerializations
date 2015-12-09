@@ -2,6 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
+using System.Reflection.Emit;
+
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -13,11 +16,16 @@ namespace Zhenway.YamlSerializations
     /// </summary>
     public class FullObjectGraphTraversalStrategy : IObjectGraphTraversalStrategy
     {
+        private static readonly MethodInfo Method_TraverseGenericDictionaryHelper = typeof(FullObjectGraphTraversalStrategy).GetMethod("TraverseGenericDictionaryHelper");
         protected readonly YamlSerializer serializer;
         private readonly int maxRecursion;
         private readonly ITypeInspector typeDescriptor;
         private readonly ITypeResolver typeResolver;
         private INamingConvention namingConvention;
+        private readonly Dictionary<Type, Action<IObjectDescriptor, IObjectGraphVisitor, int>> _behaivorCache =
+            new Dictionary<Type, Action<IObjectDescriptor, IObjectGraphVisitor, int>>();
+        private readonly Dictionary<Tuple<Type, Type>, Action<FullObjectGraphTraversalStrategy, object, IObjectGraphVisitor, int, INamingConvention>> _traverseGenericDictionaryCache =
+            new Dictionary<Tuple<Type, Type>, Action<FullObjectGraphTraversalStrategy, object, IObjectGraphVisitor, int, INamingConvention>>();
 
         public FullObjectGraphTraversalStrategy(YamlSerializer serializer, ITypeInspector typeDescriptor, ITypeResolver typeResolver, int maxRecursion, INamingConvention namingConvention)
         {
@@ -113,9 +121,6 @@ namespace Zhenway.YamlSerializations
             }
         }
 
-        private readonly Dictionary<Type, Action<IObjectDescriptor, IObjectGraphVisitor, int>> _behaivorCache =
-            new Dictionary<Type, Action<IObjectDescriptor, IObjectGraphVisitor, int>>();
-
         protected virtual void TraverseObject(IObjectDescriptor value, IObjectGraphVisitor visitor, int currentDepth)
         {
             Action<IObjectDescriptor, IObjectGraphVisitor, int> action;
@@ -172,16 +177,35 @@ namespace Zhenway.YamlSerializations
             // dictionaryType is IDictionary<TKey, TValue>
             visitor.VisitMappingStart(dictionary, entryTypes[0], entryTypes[1]);
 
-            // Invoke TraverseGenericDictionaryHelper<,>
-            traverseGenericDictionaryHelper.Invoke(entryTypes, this, dictionary.Value, visitor, currentDepth, namingConvention ?? new NullNamingConvention());
+            var key = Tuple.Create(entryTypes[0], entryTypes[1]);
+            Action<FullObjectGraphTraversalStrategy, object, IObjectGraphVisitor, int, INamingConvention> action;
+            if (!_traverseGenericDictionaryCache.TryGetValue(key, out action))
+            {
+                action = GetTraverseGenericDictionaryHelper(entryTypes[0], entryTypes[1]);
+                _traverseGenericDictionaryCache[key] = action;
+            }
+            action(this, dictionary.Value, visitor, currentDepth, namingConvention ?? new NullNamingConvention());
 
             visitor.VisitMappingEnd(dictionary);
         }
 
-        private static readonly GenericInstanceMethod<FullObjectGraphTraversalStrategy> traverseGenericDictionaryHelper =
-            new GenericInstanceMethod<FullObjectGraphTraversalStrategy>(s => s.TraverseGenericDictionaryHelper<int, int>(null, null, 0, null));
+        private static Action<FullObjectGraphTraversalStrategy, object, IObjectGraphVisitor, int, INamingConvention> GetTraverseGenericDictionaryHelper(Type tkey, Type tvalue)
+        {
+            var dm = new DynamicMethod(string.Empty, typeof(void), new[] { typeof(FullObjectGraphTraversalStrategy), typeof(object), typeof(IObjectGraphVisitor), typeof(int), typeof(INamingConvention) });
+            var il = dm.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Castclass, typeof(IDictionary<,>).MakeGenericType(tkey, tvalue));
+            il.Emit(OpCodes.Ldarg_2);
+            il.Emit(OpCodes.Ldarg_3);
+            il.Emit(OpCodes.Ldarg_S, (byte)4);
+            il.Emit(OpCodes.Call, Method_TraverseGenericDictionaryHelper);
+            il.Emit(OpCodes.Ret);
+            return (Action<FullObjectGraphTraversalStrategy, object, IObjectGraphVisitor, int, INamingConvention>)dm.CreateDelegate(typeof(Action<FullObjectGraphTraversalStrategy, object, IObjectGraphVisitor, int, INamingConvention>));
+        }
 
-        private void TraverseGenericDictionaryHelper<TKey, TValue>(
+        public static void TraverseGenericDictionaryHelper<TKey, TValue>(
+            FullObjectGraphTraversalStrategy self,
             IDictionary<TKey, TValue> dictionary,
             IObjectGraphVisitor visitor, int currentDepth, INamingConvention namingConvention)
         {
@@ -189,13 +213,13 @@ namespace Zhenway.YamlSerializations
             foreach (var entry in dictionary)
             {
                 var keyString = isDynamic ? namingConvention.Apply(entry.Key.ToString()) : entry.Key.ToString();
-                var key = GetObjectDescriptor(keyString, typeof(TKey));
-                var value = GetObjectDescriptor(entry.Value, typeof(TValue));
+                var key = self.GetObjectDescriptor(keyString, typeof(TKey));
+                var value = self.GetObjectDescriptor(entry.Value, typeof(TValue));
 
                 if (visitor.EnterMapping(key, value))
                 {
-                    Traverse(key, visitor, currentDepth);
-                    Traverse(value, visitor, currentDepth);
+                    self.Traverse(key, visitor, currentDepth);
+                    self.Traverse(value, visitor, currentDepth);
                 }
             }
         }

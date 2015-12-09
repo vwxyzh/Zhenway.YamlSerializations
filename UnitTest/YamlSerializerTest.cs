@@ -93,6 +93,34 @@ BoolValue: true
             Assert.Equal(true, dict["BoolValue"]);
         }
 
+        [Fact]
+        public void Test_Basic_Dictionary()
+        {
+            var s = new YamlSerializer();
+            var sw = new StringWriter();
+            s.Serialize(
+                sw,
+                new Dictionary<string, object>
+                {
+                    ["IntValue"] = 1,
+                    ["StringValue"] = "1.23",
+                    ["BoolValue"] = true
+                });
+            Assert.Equal(@"IntValue: 1
+StringValue: ""1.23""
+BoolValue: true
+", sw.ToString());
+            var d = new YamlDeserializer();
+            var obj = d.Deserialize<Entity>(new StringReader(sw.ToString()));
+            Assert.Equal(1, obj.IntValue);
+            Assert.Equal("1.23", obj.StringValue);
+            Assert.Equal(true, obj.BoolValue);
+            var dict = d.Deserialize<Dictionary<string, object>>(new StringReader(sw.ToString()));
+            Assert.Equal(1, dict["IntValue"]);
+            Assert.Equal("1.23", dict["StringValue"]);
+            Assert.Equal(true, dict["BoolValue"]);
+        }
+
         public class Entity
         {
             public int IntValue { get; set; }
